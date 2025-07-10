@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/classes/Authentication.asp"--><%
+<!--#include file="../classes/Authentication.asp"--><%
 Dim Auth, requestAction, requestMethod, requestQuery
 
 requestMethod = Request.ServerVariables("REQUEST_METHOD")
