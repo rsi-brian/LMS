@@ -1,7 +1,7 @@
 'use strict';
 
 import { UINotifications } from "/includes/classes/UINotifications.js";
-import TrainingModule from "../classes/TrainingModule_250320.min.js";
+import TrainingModule from "../classes/TrainingModule_250422.min.js";
 
 const courseName = 'Solar EZ Program Knowledge Check';
 

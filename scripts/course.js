@@ -2,7 +2,7 @@
 
 import { UINotifications } from "/includes/classes/UINotifications.js";
 import TrainingModule from "../classes/TrainingModule_250320.min.js";
-import { UID_LOGIN } from "/includes/classes/UID_Login_250407.min.js";
+import { LMSAuth } from "/includes/Authentication/Authenticate.min.js";
 
 const urlParams = new URLSearchParams(window.location.search);
 
@@ -17,9 +17,10 @@ window.addEventListener("pageshow", function (event) {
 });
 
 document.addEventListener('DOMContentLoaded', async function() {
-    if (await UID_LOGIN.verifyLogin()) {
-        const courseName = urlParams.get('courseid');
-        trainingModule.create(courseName);
+    if (await LMSAuth.verifyLogin()) {
+        const courseID = urlParams.get('courseid');
+        const courseName = urlParams.get('name');
+        trainingModule.create(courseID, courseName);
     }
 });
 

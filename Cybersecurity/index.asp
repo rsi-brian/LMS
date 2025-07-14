@@ -18,7 +18,7 @@
     <iframe id="Course_Content" width="100%" allowfullscreen></iframe>
 
     <script src="scripts/course.min.js" type="module"></script>
-    <script src="../scripts/SCORM_API_250422.min.js" type="module"></script>
+    <script src="../scripts/SCORM_API_250710.min.js" type="module"></script>
     <script src="../scripts/SCORM_API_wrapper.min.js"></script>
 </body>
 </html>

@@ -1,26 +1,26 @@
-<!--#include virtual="/includes/classes/Authentication.asp"--><%
-Dim Auth
+<!--#include virtual="/includes/Authentication/Authentication.asp"--><%
+Dim Auth, requestAction, requestMethod, requestQuery
 
-Set requestMethod = Request.ServerVariables("REQUEST_METHOD")
-Set requestQuery = Request.ServerVariables("QUERY_STRING")
-Set requestAction = Request.Form("action")
+requestMethod = Request.ServerVariables("REQUEST_METHOD")
+requestQuery = Request.ServerVariables("QUERY_STRING")
+requestAction = Request.Form("action")
+
 Set Auth = New Authentication
+Auth.method = Request.Form("authType")
 
 If requestMethod = "POST" and requestAction = "getUserData" Then
-    Dim getUserData, authType
-    Set authType = Request.Form("authType")
-
-    If Auth.isAuthenticated(authType) = True Then
-        getUserData = Auth.getUserJSON()
-    Else
+    Dim getUserData
         getUserData = "{ ""error"": ""True"", ""error_msg"": ""Could not retrieve User Data."", ""error_type"": ""login"", ""data"":""Error while getting user data. (Sessions could not be found)"" }"
-    End If
+
+    If Auth.isAuthenticated() = True Then getUserData = Auth.getUserJSON()
 
     Response.ContentType = "application/json"
     Response.Write getUserData
+
 ElseIf requestMethod = "POST" and requestAction = "processUID" Then
     Response.ContentType = "application/json"
     Response.Write Auth.authenticate(Request.Form("userUID"), Request.Form("userEmail"))
+
 ElseIf requestMethod = "POST" and requestAction = "UIDLogOut" Then
     Auth.removeSessions()
 End If

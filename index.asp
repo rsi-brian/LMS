@@ -12,9 +12,7 @@
 	<header class="flex flex-between">
 		<img id="RSI_logo" src="/home/images/RSI/logos/RSI_white_md.png" alt="RS&I, Inc.">
 		<div id="course_title">RS&amp;I Training System</div>
-		<div id="user_menu" style="text-align:center;">
-			<!-- Logged in as<br><br> -->
-		</div>
+        <div id="user_menu"><a href="login.asp?logout=logout">Log Out</a></div>
 	</header>
 
 	<div class="lms-content">

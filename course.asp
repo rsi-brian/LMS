@@ -13,7 +13,7 @@
             <img id="RSI_logo" src="/home/images/RSI/logos/RSI_white_md.png" alt="RS&I, Inc.">
         </a>
         <div id="course_title">RS&amp;I Training System</div>
-        <div id="user_menu"><a href="login.html?logout=logout">Log Out</a></div>
+        <div id="user_menu"><a href="login.asp?logout=logout">Log Out</a></div>
     </header>
 
     <iframe id="Course_Content" width="100%" allowfullscreen></iframe>
