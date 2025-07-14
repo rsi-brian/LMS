@@ -11,25 +11,25 @@
 
 export default class TrainingModule {
 
-    constructor(classOptions) {
+    constructor(classOptions = null) {
         this.OPTIONS = {
-            ...{ "debug": false },
-            ...classOptions
+            "debug": false,
         }
         this.COURSE = {};
         this.USER_DATA = {};
+        this.DEBUG_MODE = (classOptions?.debug === true || classOptions?.debug?.toLowerCase() === 'true') ? true : this.OPTIONS.debug;
         this.RSI_TRAINING_PATH = '/training';
         this.RSI_COURSES_PATH = `${this.RSI_TRAINING_PATH}/courses`;
         this.RSI_FUNCTIONS = `${this.RSI_TRAINING_PATH}/scripts/functions.asp`;
         this.PIPWERKS_SCORM = pipwerks.SCORM;
 
-        if (typeof pipwerks !== "undefined") this.PIPWERKS_SCORM.debug.isActive = this.OPTIONS.debug;
+        if (typeof pipwerks !== "undefined") this.PIPWERKS_SCORM.debug.isActive = this.DEBUG_MODE;
     }
 
 
     // PRIVATE METHODS //
 
-    async __getManifest(path) {
+    async #getManifest(path) {
         try {
             const response = await fetch(`${this.RSI_COURSES_PATH}/${path}/imsmanifest.xml`);
 
@@ -46,7 +46,7 @@ export default class TrainingModule {
         }
     }
 
-    async __getUserData() {
+    async #getUserData() {
         return fetch(this.RSI_FUNCTIONS, {
             method: 'POST',
             headers: {
@@ -64,7 +64,7 @@ export default class TrainingModule {
         });
     }
 
-    async __processManifest(response) {
+    async #processManifest(response) {
         try {
             const xmlText = await response.text();
             const parser = new DOMParser();
@@ -100,10 +100,10 @@ export default class TrainingModule {
                 this.showDebug('Title element not found.', 'warn');
             }
 
-            if (manifestElement.hasAttribute('indentifier')) {
-                this.COURSE.indentifier = manifestElement.getAttribute('indentifier');
+            if (manifestElement.hasAttribute('identifier')) {
+                this.COURSE.identifier = manifestElement.getAttribute('identifier');
             } else {
-                this.COURSE.indentifier = null;     // TODO: Need to set this to something, although there should always be an identifier
+                this.COURSE.identifier = null;                                                                          // TODO: Need to set this to something, although there should always be an identifier
                 this.showDebug('Manifest identifier not found.', 'warn');
             }
 
@@ -115,13 +115,16 @@ export default class TrainingModule {
         }
     }
 
-    __injectCSS() {
+    #injectCSS() {
         document.getElementById("Course_Content").onload = function() {
             const iframe = document.getElementById("Course_Content").contentWindow.document;
             const style = iframe.createElement("style");
-            const styleText = 'body {background-color: #dcdee0} ' +
-                              '.free-logo {cursor: default !important} ' +
-                              '.free-logo__logo {visibility: hidden !important;} ' +
+            // const styleText = 'body {background-color: #dcdee0} ' +
+            //                   '.free-logo {cursor: default !important} ' +
+            //                   '.free-logo__logo {visibility: hidden !important;} ' +
+            //                   '.quiz-top-panel, .top-panel {display: none !important} ' +
+            //                   '.quiz-control-panel__quiz-score-info {display: none !important}';
+            const styleText = 'body {background-color: #dcdee0}' +
                               '.quiz-top-panel, .top-panel {display: none !important} ' +
                               '.quiz-control-panel__quiz-score-info {display: none !important}';
             style.innerHTML = styleText;
@@ -129,7 +132,7 @@ export default class TrainingModule {
         };
     }
 
-    __setSCORMUser(userData) {
+    #setSCORMUser(userData) {
         const SCORM = this.PIPWERKS_SCORM;
         const fullName = `${userData.lastname},${userData.firstname}`;
 
@@ -148,34 +151,59 @@ export default class TrainingModule {
         }
     }
 
-    __showContent(target = 'Course_Content') {
+    #showContent(target = 'Course_Content') {
         const courseTarget = document.getElementById(target);
 
         try {
             courseTarget.src = `${this.RSI_COURSES_PATH}/${this.COURSE.path}/${this.COURSE.href}`;
             if (this.COURSE.title !== null) document.getElementById('course_title').innerHTML = this.COURSE.title;
-            this.__injectCSS();
+            this.#injectCSS();
         } catch (error) {
             this.showDebug(`Error loading course content: ${error}`, 'error');
             this.showModal("<p style='text-align:left'><strong>Error</strong>: Unable to load the course content.<br>Please try refreshing the page or contact support if the problem persists.</p>", 600000);
         }
     }
 
+    async #saveToDB(cmi) {
+        try {
+            const cmiJSONString = JSON.stringify(cmi);
+console.info(cmiJSONString);
+            const response = await fetch(this.RSI_FUNCTIONS, {
+                method: 'POST',
+                headers: {
+                    // 'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
+                },
+				body:  new URLSearchParams({
+					action:		"saveCourseData",
+					cmiData:    cmiJSONString,
+                    courseID:   this.COURSE.courseID,
+                    identifier: this.COURSE.identifier,
+				})
+            });
+
+            return await response.json();
+        } catch (error) {
+            this.showDebug(`Error saving the data: ${error}`, "error");
+            return false;
+        }
+    }
+
 
     // PUBLIC METHODS //
 
-    async create(coursePath) {
-        const userData = await this.__getUserData();
+    async create(courseID, coursePath) {
+        const userData = await this.#getUserData();
 
-        if (!userData?.attuid && !userData?.guid) {
-            this.showDebug(`Cannot fetch user data (guid: ${userData.guid})`, "error");
-            this.showModal("<p style='text-align:left'><strong>Error</strong>: Unable to load user data.<br>Please try refreshing the page or contact support if the problem persists.</p>", 600000);
-            return false;
-        }
+        // if (!userData?.attuid && !userData?.guid) {                                                                  // Disabling - Moving all authentication to the back end
+        //     this.showDebug(`Cannot fetch user data (guid: ${userData.guid})`, "error");
+        //     this.showModal("<p style='text-align:left'><strong>Error</strong>: Unable to load user data.<br>Please try refreshing the page or contact support if the problem persists.</p>", 600000);
+        //     return false;
+        // }
+
         this.USER_DATA = userData;
-
-        const response = await this.__getManifest(coursePath);
-        const manifest = await this.__processManifest(response);
+        const response = await this.#getManifest(coursePath);
+        const manifest = await this.#processManifest(response);
         const SCORM = this.PIPWERKS_SCORM;
         const COURSE = this.COURSE;
         const validVersions = ["1.2", "2004", "1.3", "2001"];                                                           // 1.2 & 2001, and 1.3 & 2004 are the same
@@ -188,6 +216,7 @@ export default class TrainingModule {
         }
 
         COURSE.path = coursePath;
+        COURSE.courseID = courseID;
         COURSE.validVersion = validVersions.filter(keyword => COURSE.schemaversion.includes(keyword));
 
         if (COURSE.schema !== "ADL SCORM") {
@@ -211,7 +240,7 @@ export default class TrainingModule {
         }
 
         localStorage.setItem('userData', JSON.stringify(userData));
-        const success =  this.__setSCORMUser(userData);
+        const success =  this.#setSCORMUser(userData);
 
         if (!success) {
             this.showDebug("Failed to set SCORM data", "error");
@@ -227,15 +256,13 @@ export default class TrainingModule {
             return false;
         }
 
-        this.__showContent();
+        this.#showContent();
     }
 
-    // TODO: Need to get a unique course id so we can save the data for each course
-    saveCourse(cmi, saveToDB = true) {
-// console.warn('TrainingModule.saveCourse()');
-        // if saveToDB === true then saveToDB();
+    saveCourse(cmi, writeToDB = true) {
+        if (writeToDB === true) this.#saveToDB(cmi);
         this.saveLocal(cmi);
-        // this.showDebug(cmi);
+        this.showDebug(cmi);
     }
 
     saveLocal(cmi) {
@@ -244,17 +271,10 @@ export default class TrainingModule {
 
     }
 
-    saveToDB(cmi) {
-        // Get the user information
-        // Get the cmi data
-        // Put it together into a common way for any version
-        // Get with Scott to show which fields are needed
-    }
-
-    close() {
-console.warn('TrainingModule.close()');
-        this.PIPWERKS_SCORM.quit();
+    close(cmi) {
         // localStorage.removeItem('cmiData');
+        this.saveCourse(cmi);
+        this.PIPWERKS_SCORM.connection.isActive = false;
     }
 
     showModal(message = null, delay = 3000) {
@@ -285,22 +305,22 @@ console.warn('TrainingModule.close()');
     }
 
     showDebug(message = null, type = "log") {
-        if (!message || !this.OPTIONS.debug) return;
-
-        switch (type) {
-            case "info":
-                console.info(message);
-                break;
-            case "warn":
-                console.warn(message);
-                break;
-            case "error":
-                console.error(message);
-                break;
-            default:
-                console.log(message);
-                break;
-        }
+        if (!message || !this.DEBUG_MODE) return;
+        console[type](message);
+        // switch (type) {
+        //     case "info":
+        //         console.info(message);
+        //         break;
+        //     case "warn":
+        //         console.warn(message);
+        //         break;
+        //     case "error":
+        //         console.error(message);
+        //         break;
+        //     default:
+        //         console.log(message);
+        //         break;
+        // }
     }
 
 }

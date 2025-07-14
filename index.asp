@@ -1,4 +1,4 @@
-<!--#include VIRTUAL = "/training/scripts/functions.asp"-->
+<!--#include file = "scripts/functions.asp"-->
 <html lang="en">
 <head>
 	<title>RS&I Training</title>
