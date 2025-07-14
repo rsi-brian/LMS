@@ -50,7 +50,9 @@ export default class TrainingModule {
     async #getUserData(authType = this.OPTIONS.authType) {
         return fetch(this.RSI_FUNCTIONS, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
             body: `action=getUserData&authType=${authType}`
         })
         .then(response => response.json())
@@ -100,9 +102,9 @@ export default class TrainingModule {
             }
 
             if (manifestElement.hasAttribute('identifier')) {
-                this.COURSE.indentifier = manifestElement.getAttribute('identifier');
+                this.COURSE.identifier = manifestElement.getAttribute('identifier');
             } else {
-                this.COURSE.indentifier = null;     // TODO: Need to set this to something, although there should always be an identifier
+                this.COURSE.identifier = null;     // TODO: Need to set this to something, although there should always be an identifier
                 this.showDebug('Manifest identifier not found.', 'warn');
             }
 

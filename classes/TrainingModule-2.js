@@ -260,7 +260,7 @@ console.info(cmiJSONString);
     }
 
     saveCourse(cmi, writeToDB = true) {
-        if (writeToDB === true) { this.#saveToDB(cmi); }
+        if (writeToDB === true) this.#saveToDB(cmi);
         this.saveLocal(cmi);
         this.showDebug(cmi);
     }
