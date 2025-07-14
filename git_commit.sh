@@ -27,7 +27,7 @@ echo "All changes staged successfully."
 echo ""
 
 # 4. Check if there are changes to commit
-if git diff --cached --exit-code && git diff --exit-code; then
+if git diff --cached --exit-code >/dev/null && git diff --exit-code >/dev/null; then
     echo "No changes to commit."
     exit 0
 fi
